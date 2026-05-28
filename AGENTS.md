@@ -48,3 +48,6 @@ When `dev/PROJECT_CONTEXT.md` still contains `<!-- ` placeholder comments, the f
 
 ## After finishing any task
 If you made material changes to the architecture, data model, or project state, update `dev/PROJECT_CONTEXT.md` to reflect the new reality.
+
+## Bug fix rule (mandatory for all agents)
+When a bug is found and fixed, add a test (unit test, integration test, or routing scenario) that would have caught it before declaring the fix complete. Do not close a bug fix without a corresponding test.
