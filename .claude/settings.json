@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Write(*)",
+      "Bash(git checkout*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr*)",
+      "Bash(ls*)",
+      "Bash(find*)",
+      "Bash(cat*)",
+      "Bash(mkdir*)"
+    ]
+  }
+}
