@@ -1,0 +1,102 @@
+name: Agent J — Implement Issue
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  implement-issue:
+    # Security: only run for agent-j label applied by the repo owner
+    if: github.event_name == 'issues' && github.event.label.name == 'agent-j' && github.actor == 'uandiqueue'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          fetch-depth: 1
+
+      - name: Implement issue with Claude
+        uses: anthropics/claude-code-action@d2b7d924ec4af238380e490a0d57ce6bcc85ce8d  # v1.0.123
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          branch_prefix: "agent-j/"
+          base_branch: "agent-j-staging"
+          prompt: |
+            Implement the following GitHub issue in this repository.
+
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            Before writing any code, read dev/PROJECT_CONTEXT.md for project state and architecture.
+            Follow all rules in AGENTS.md (branch naming, security, scope).
+
+  address-review-feedback:
+    # Security: only repo owner can ask Claude to continue work on an existing PR
+    if: github.event_name == 'issue_comment' && github.actor == 'uandiqueue' && github.event.issue.pull_request && contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+    steps:
+      - name: Address PR feedback with Claude
+        uses: anthropics/claude-code-action@d2b7d924ec4af238380e490a0d57ce6bcc85ce8d  # v1.0.123
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            You are responding to review feedback on existing PR #${{ github.event.issue.number }}.
+
+            Do not create a new branch.
+            Do not open a new pull request.
+            Commit fixes to the current PR head branch only.
+            Keep the PR targeting agent-j-staging.
+
+            Review feedback comment:
+            ${{ github.event.comment.body }}
+
+            Follow all rules in AGENTS.md.
+
+  implement-commented-issue:
+    # Security: only repo owner can ask Claude to implement an existing issue by comment
+    if: github.event_name == 'issue_comment' && github.actor == 'uandiqueue' && github.event.issue.pull_request == null && contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+      actions: read
+    steps:
+      - name: Implement existing issue with Claude
+        uses: anthropics/claude-code-action@d2b7d924ec4af238380e490a0d57ce6bcc85ce8d  # v1.0.123
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          branch_prefix: "agent-j/"
+          base_branch: "agent-j-staging"
+          prompt: |
+            Implement this existing GitHub issue in this repository.
+
+            Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+            ${{ github.event.issue.body }}
+
+            Operator comment:
+            ${{ github.event.comment.body }}
+
+            Create or reuse branch `agent-j/issue-${{ github.event.issue.number }}`.
+            Open or update a PR targeting `agent-j-staging`.
+            The PR body must contain `Closes #${{ github.event.issue.number }}`.
+
+            Before writing any code, read dev/PROJECT_CONTEXT.md for project state and architecture.
+            Follow all rules in AGENTS.md.
